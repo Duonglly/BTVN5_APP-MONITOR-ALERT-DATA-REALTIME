@@ -5,17 +5,30 @@
    Bản chất: Khác với ảo hóa truyền thống (Virtual Machine - cần chạy cả một hệ điều hành khách), Docker chia sẻ chung nhân (Kernel) của hệ điều hành host, giúp container khởi động trong vài giây và cực kỳ nhẹ.
 
 3. Các từ khóa trong docker-compose.ymldocker-compose giúp quản lý đa container (multi-container) chỉ bằng một file cấu hình duy nhất
-4. 
+   
    <img width="454" height="666" alt="image" src="https://github.com/user-attachments/assets/1a6f0113-08a1-4996-8392-de989784fbbc" />
    
-5. Ưu điểm khi triển khai ứng dụng bằng Docker
+4. Ưu điểm khi triển khai ứng dụng bằng Docker
+   
 Nhất quán môi trường: Giải quyết triệt để câu nói kinh điển "Nhưng trên máy em vẫn chạy được mà!". Chạy ở laptop thế nào thì lên server y như vậy.
 
-Tiết kiệm tài nguyên: Container nhẹ hơn VM rất nhiều, chạy được nhiều service trên cùng một phần cứng.
+- Tiết kiệm tài nguyên: Container nhẹ hơn VM rất nhiều, chạy được nhiều service trên cùng một phần cứng.
 
-Triển khai nhanh chóng: Khởi động, tắt, hoặc tái cấu trúc hệ thống chỉ bằng 1-2 câu lệnh.
+- Triển khai nhanh chóng: Khởi động, tắt, hoặc tái cấu trúc hệ thống chỉ bằng 1-2 câu lệnh.
 
-Cách ly an toàn: Các ứng dụng chạy độc lập, lỗi của container này không làm sập container khác.
+- Cách ly an toàn: Các ứng dụng chạy độc lập, lỗi của container này không làm sập container khác.
+
+5. Quy trình triển khai ứng dụng lên Máy chủ Offline (Không có Internet)
+
+Bước 1 (Tại laptop có Internet): Tải tất cả các image cần thiết về và đóng gói thành file nén .tar:
+docker save -o my_images.tar nodered/node-red mariadb:10.6 influxdb:2.7 grafana/grafana nginx:alpine
+
+Bước 2 (Chuyển file): Copy file my_images.tar và toàn bộ thư mục code (bao gồm file docker-compose.yml, mã nguồn Flask, Frontend) vào USB hoặc ổ cứng di động, đem cắm vào Máy chủ thật.
+
+Bước 3 (Tại máy chủ Offline): Bung file nén để nạp các image vào Docker của Server:docker load -i my_images.tar
+
+Bước 4 (Khởi chạy): Di chuyển vào thư mục chứa file docker-compose.yml trên server và chạy lệnh:docker compose up -d
+
 ## PHẦN 2: THIẾT LẬP CẤU TRÚC THƯ MỤC DỰ ÁN
 
 ## Mở Terminal/CMD trên laptop của bạn, chọn một thư mục bất kỳ và gõ chuỗi lệnh sau để tạo cấu trúc cây thư mục:
@@ -121,19 +134,19 @@ docker exec -it mariadb_server mysql -u root -prootpassword -e "USE monitor_db; 
 
 Mở Telegram, tìm kiếm @BotFather. Gõ lệnh /newbot, đặt tên cho Bot là LyBitCoin_bot và nhận chuỗi Token bí mật:8933665636:AAFBF0-N63fF7DJrL0URB-dbB30pN1oONBw
 
-Tạo một Group mới trên Telegram. Thêm bạn của bạn vào $\rightarrow$ Nhóm hiện có 2 người.
+Tạo một Group mới trên Telegram. Thêm bạn bè vào.
 
-Vào phần Thêm thành viên (Add Members), tìm kiếm ID người dùng 1875746636 để mời vào nhóm $\rightarrow$ Lúc này nhóm đạt chuẩn 3 thành viên.
+Mời chính con Bot vừa tạo ở trên vào nhóm này .
 
-Mời chính con Bot bạn vừa tạo ở trên vào nhóm này.
+Để lấy Chat ID của Group này, add thêm con bot @MissRose_bot vào nhóm, gõ lệnh /id, nó sẽ trả về một dãy số âm. Đó chính là Chat ID của nhóm.
 
-Để lấy Chat ID của Group này, hãy add thêm con bot @MissRose_bot vào nhóm, gõ lệnh /id, nó sẽ trả về một dãy số âm (Ví dụ: -10021456987). Đó chính là Chat ID của nhóm.
+Sau khi lấy được id nhóm rồi thì thăng chức admin cho con bot LyBitCoin.
 
 ## Bước 4: Thiết lập Flow xử lý trong Node-RED
 
 Truy cập trình duyệt theo địa chỉ: http://localhost:1880.
 
-Ta tiến hành kéo các khối (node) để thực hiện logic:Lấy dữ liệu động: Dùng node Inject thiết lập lặp lại mỗi 5 giây $\rightarrow$ Nối vào node HTTP Request.
+Ta tiến hành kéo các khối (node) để thực hiện logic:Lấy dữ liệu động: Dùng node Inject thiết lập lặp lại mỗi 5 giây Nối vào node HTTP Request.
 
 URL lấy dữ liệu thực tế (Ví dụ tỷ giá Bitcoin từ CoinGecko công khai, dữ liệu biến động liên tục không cần API Key): https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd
 
@@ -169,14 +182,15 @@ Nhấp vào dấu 3 chấm góc Panel $\rightarrow$ Chọn Share $\rightarrow$ C
 
 <img width="1216" height="176" alt="image" src="https://github.com/user-attachments/assets/d5eae41b-86d3-4773-a0b2-c8b1be0f28bc" />
 
-## Giao diện tổng quan dự đoán bitcoin
+## Giao diện tổng quan bitcoin
 
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/5022498b-d167-46b1-bce8-fa9dce0f4631" />
 
 
-## Test Bot cảnh báo
+## Test Bot cảnh báo (Ngưỡng cảnh báo từ 60000 đến 95000)
 
 <img width="1125" height="2436" alt="image" src="https://github.com/user-attachments/assets/7096ba6e-0fd9-40c9-9e7e-482e82e7d183" />
+<img width="1125" height="2436" alt="image" src="https://github.com/user-attachments/assets/de6af17c-d2f9-4495-ad55-b6510c4420e7" />
 
 
 ## PHẦN 5: QUY TRÌNH "XUẤT - XÓA - KHÔI PHỤC" CONTAINER THEO ĐỀ BÀI
